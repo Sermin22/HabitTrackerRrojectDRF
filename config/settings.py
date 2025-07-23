@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     "drf_yasg",
     "django_celery_beat",
 
+    "users",
+
 ]
 
 MIDDLEWARE = [
@@ -130,3 +132,21 @@ MEDIA_ROOT = BASE_DIR / "media"  # добавил
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+AUTH_USER_MODEL = "users.CustomUser"
+
+# Настройки
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",  # JWT-токенов
+    ),
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.AllowAny",  # или IsAuthenticated вместо AllowAny
+    ]
+}
+
+# Настройки срока действия токенов
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+}
