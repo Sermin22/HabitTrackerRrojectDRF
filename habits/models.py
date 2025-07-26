@@ -1,7 +1,5 @@
-from django.core.exceptions import ValidationError
 from django.db import models
 from config import settings
-from habits.validators import validate_periodicity_days, validate_execution_time
 
 
 class Habit(models.Model):
@@ -26,28 +24,23 @@ class Habit(models.Model):
     periodicity_days = models.PositiveIntegerField(
         default=1, verbose_name="Периодичность (дней)",
         help_text="Добавьте приятную привычку к полезной",
-        validators=[validate_periodicity_days],
     )
     reward = models.CharField(max_length=255, blank=True, null=True, verbose_name="Вознаграждение")
     execution_time = models.PositiveIntegerField(
-        blank=True, null=True, verbose_name="Время на выполнение (в секундах)",
-        help_text="Укажите время на выполнение привычки (в секундах, для полезной - не более 120 сек)",
-        validators=[validate_execution_time],
+        default=120, verbose_name="Время на выполнение (в секундах)",
+        help_text="Укажите время на выполнение привычки (в секундах, не более 120 сек, "
+                  "по умолчанию 120 сек.)",
     )
     public = models.BooleanField(
         default=False, verbose_name="Публикация привычки",
         help_text="Опубликуйте привычку",
     )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
 
     class Meta:
         verbose_name = "Привычка"
         verbose_name_plural = "Привычки"
-
-    def clean(self):
-        if self.related_habit and self.reward:
-            raise ValidationError("Невозможно выбрать одновременно и связанную привычку, и вознаграждение.")
-        if self.is_pleasant_habit and (self.reward or self.related_habit):
-            raise ValidationError("У приятной привычки не может быть вознаграждения или связанной привычки.")
 
     def __str__(self):
         return f"{self.action[:50]} - {self.time} - {self.place}"
