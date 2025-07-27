@@ -3,6 +3,10 @@ from rest_framework.test import APITestCase
 from users.models import CustomUser
 from django.urls import reverse
 from habits.models import Habit
+import unittest
+from unittest.mock import patch
+from habits.services import send_telegram_massage
+from django.conf import settings
 
 
 class HabitTestCase(APITestCase):
@@ -150,7 +154,7 @@ class HabitTestCase(APITestCase):
             time="08:00",
             action="Пить кофе",
             is_pleasant_habit=True,
-            )
+        )
         reward = "Игра"  # вознаграждение
         url = reverse("habits:habit_create")
         data = {
@@ -227,3 +231,68 @@ class HabitTestCase(APITestCase):
         result = response.json()
         self.assertIn("У приятной привычки не может быть вознаграждения.",
                       result["non_field_errors"])
+
+    def test_invalid_pleasant_periodicity_days(self):
+        '''Проверяем, что нельзя выполнять привычку реже, чем 1 раз в 7 дней'''
+
+        url = reverse("habits:habit_create")
+        data = {
+            "owner": self.user,
+            "place": "Дом",
+            "time": "08:30",
+            "action": "Пить чай",
+            "is_pleasant_habit": False,
+            "periodicity_days": 8,
+            "execution_time": 120,
+            "public": False
+        }
+        response = self.client.post(url, data)
+        # Проверка кода ошибки
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        # Проверка наличия сообщения об исключении
+        result = response.json()
+        print(result)
+        self.assertIn("periodicity_days", result)
+        self.assertIn("Привычка выполняется недостаточно часто (менее 1 раза в 7 дней)."
+                      "Текущее значение: 8.",
+                      result["periodicity_days"])
+
+    def test_invalid_pleasant_execution_time(self):
+        '''Проверяем, что время выполнения должно быть не больше 120 секунд'''
+
+        url = reverse("habits:habit_create")
+        data = {
+            "owner": self.user,
+            "place": "Дом",
+            "time": "08:30",
+            "action": "Пить чай",
+            "is_pleasant_habit": False,
+            "periodicity_days": 1,
+            "execution_time": 130,
+            "public": False
+        }
+        response = self.client.post(url, data)
+        # Проверка кода ошибки
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        # Проверка наличия сообщения об исключении
+        result = response.json()
+        print(result)
+        self.assertIn("execution_time", result)
+        self.assertIn("Время выполнения привычки превышает допустимое значение (120 сек.)Текущее значение: 130",
+                      result["execution_time"])
+
+
+class TestTelegram(unittest.TestCase):
+    '''Тест функции, отправляющей уведомление в Телеграм'''
+
+    @patch("habits.services.requests.get")
+    def test_send_telegram_massage(self, mock_get):
+        chat_id = "123456789"
+        message = "Test Telegram message"
+
+        send_telegram_massage(chat_id, message)
+
+        mock_get.assert_called_once_with(
+            f"{settings.TELEGRAM_URL}{settings.TELEGRAM_TOKEN}/sendMessage",
+            params={"text": message, "chat_id": chat_id}
+        )
