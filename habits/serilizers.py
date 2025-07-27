@@ -28,28 +28,30 @@ class HabitSerializer(ModelSerializer):
         if data.get("related_habit") and data.get("reward"):
             raise serializers.ValidationError("Невозможно выбрать одновременно и связанную привычку, "
                                               "и вознаграждение.")
-        # Проверка на запрет вознаграждения и связанной привычки для приятных привычек
-        if data.get("is_pleasant_habit") and (data.get("reward") or data.get("related_habit")):
-            raise serializers.ValidationError("У приятной привычки не может быть вознаграждения "
-                                              "или связанной привычки.")
         # Если привычка помечена как приятная, то не может быть связанной привычки и вознаграждения
         if data.get("is_pleasant_habit") is True:
             if data.get("reward"):
                 raise serializers.ValidationError("У приятной привычки не может быть вознаграждения.")
             if data.get("related_habit"):
                 raise serializers.ValidationError("У приятной привычки не может быть связанной привычки.")
-        # # Проверка periodicity_days через внешний вылидатор
-        # if "periodicity_days" in data:
-        #     validator_periodicity_days(data.get("periodicity_days"))
-        # # Проверяем execution_time через внешний вылидатор
-        # if "execution_time" in data:
-        #     validator_execution_time(data.get("execution_time"))
         return data
 
     def validate_related_habit(self, value):
         if value and not value.is_pleasant_habit:
             raise serializers.ValidationError("В связанные можно выбирать только приятные привычки.")
         return value
+
+        # # Еще вариант в validate Проверка на запрет вознаграждения и связанной привычки для приятных привычек
+        # if data.get("is_pleasant_habit") and (data.get("reward") or data.get("related_habit")):
+        #     raise serializers.ValidationError("У приятной привычки не может быть вознаграждения "
+        #                                       "или связанной привычки.")
+
+        # # Можно в validate Проверка periodicity_days через внешний вылидатор
+        # if "periodicity_days" in data:
+        #     validator_periodicity_days(data.get("periodicity_days"))
+        # # Можно в validate Проверяем execution_time через внешний вылидатор
+        # if "execution_time" in data:
+        #     validator_execution_time(data.get("execution_time"))
 
     # def validate_periodicity_days(self, value):
     #     # Вызываем внешний валидатор для проверки periodicity_days
