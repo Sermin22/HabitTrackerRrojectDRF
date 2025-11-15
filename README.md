@@ -29,6 +29,25 @@ git clone https://github.com/Sermin22/HabitTrackerRrojectDRF
 ```
 2. Создайте .env файл (по примеру .env_template)
 
+3. Установите зависимости:
+```
+poetry install
+```
+4. Создайте .env файл (по примеру .env_template)
+5. Примените миграции:
+```
+python manage.py makemigrations
+python manage.py migrate
+```
+6. Создайте суперпользователя (по желанию):
+```
+python manage.py createsuperuser
+```
+7. Запустите сервер:
+```
+python manage.py runserver
+```
+
 ## Стек технологий
 
 - Django / DRF
@@ -71,6 +90,30 @@ git clone https://github.com/Sermin22/HabitTrackerRrojectDRF
 
 ## Пагинация
 - Стандартная пагинация по 5 привычек на страницу
+
+## Документация к проекту
+
+Подключен и настроен вывод документации для проекта, которую можно посмотреть по ссылкам:
+```
+/swagger/
+/redoc/
+```
+
+## Проверка работы
+
+После запуска сервера доступ к API осуществляется через Postman или любой HTTP-клиент.
+
+Примеры эндпоинтов:
+
+/habits/ — список привычек
+
+/habits/{id}/ — детали привычки
+
+/habits/create/ — создать привычку
+
+/habits/{id}/update/ — изменить привычку
+
+/habits/{id}/delete/ — удалить привычку
 
 ## Тесты
 - Покрытие тестами: 90%+
